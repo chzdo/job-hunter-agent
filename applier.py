@@ -23,7 +23,8 @@ class PlaywrightApplier:
         self.candidate = config.get("candidate", {})
         self.browser_cfg = config.get("browser", {})
         self.resume_path = Path(self.candidate.get("resume_path", "resumes/resume.pdf")).resolve()
-        self.headless = self.browser_cfg.get("headless", True)  # Headless by default for background execution
+        is_ci = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
+        self.headless = True if is_ci else self.browser_cfg.get("headless", True)
         self.user_data_dir = Path(__file__).parent / "data" / "browser_profile"
         self.user_data_dir.mkdir(parents=True, exist_ok=True)
 

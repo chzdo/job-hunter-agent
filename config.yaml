@@ -71,7 +71,7 @@ screening_answers:
   veteran_status: 'No'
   disability_status: 'No'
 browser:
-  headless: false
+  headless: true
   human_delay_seconds:
   - 2
   - 5

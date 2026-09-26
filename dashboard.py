@@ -1,5 +1,4 @@
 import os
-import cgi
 import json
 import yaml
 import shutil
@@ -19,7 +18,6 @@ RESUMES_DIR = BASE_DIR / "resumes"
 DATA_DIR = BASE_DIR / "data"
 DASHBOARD_FILE = DATA_DIR / "dashboard.html"
 
-# Global state to track background cycle execution
 EXECUTION_STATE = {
     "is_running": False,
     "last_run": None,
@@ -54,11 +52,14 @@ def run_cycle_thread():
         EXECUTION_STATE["last_run"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def render_dashboard_html() -> str:
-    """Generate interactive HTML dashboard with role selector and CV upload."""
+    """Generate interactive HTML dashboard with role selector, locations, job type, and CV preview."""
     cfg = load_config()
     stats = get_stats()
     roles = cfg.get("search", {}).get("roles", [])
+    locations = cfg.get("search", {}).get("locations", ["Nigeria"])
+    job_type = cfg.get("search", {}).get("job_type", "both")
     resumes = cfg.get("resumes", {})
+    email_cfg = cfg.get("email_notifications", {})
 
     jobs = []
     for s in ["APPLIED", "QUEUED", "DISCOVERED", "SKIPPED", "FAILED"]:
@@ -81,9 +82,9 @@ def render_dashboard_html() -> str:
         """)
 
     roles_json = json.dumps(roles)
+    locations_json = json.dumps(locations)
+    job_type_json = json.dumps(job_type)
     resumes_json = json.dumps(resumes)
-    stats_json = json.dumps(stats)
-    is_running_str = "true" if EXECUTION_STATE["is_running"] else "false"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -132,16 +133,15 @@ def render_dashboard_html() -> str:
         .card.skipped .card-value {{ color: var(--info); }}
         .card.failed .card-value {{ color: var(--danger); }}
 
-        .management-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem; }}
-        @media(max-width: 900px) {{ .management-grid {{ grid-template-columns: 1fr; }} }}
+        .management-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }}
 
-        .panel {{ background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }}
+        .panel {{ background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }}
         .panel-title {{ font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }}
 
         .tag-list {{ display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 48px; }}
-        .role-tag {{ background: #334155; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }}
-        .role-tag span.remove {{ cursor: pointer; color: #f87171; font-weight: bold; font-size: 1rem; }}
-        .role-tag span.remove:hover {{ color: #ef4444; }}
+        .tag-item {{ background: #334155; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }}
+        .tag-item span.remove {{ cursor: pointer; color: #f87171; font-weight: bold; font-size: 1rem; }}
+        .tag-item span.remove:hover {{ color: #ef4444; }}
 
         .input-group {{ display: flex; gap: 0.5rem; }}
         .input-group input, .input-group select {{
@@ -186,7 +186,7 @@ def render_dashboard_html() -> str:
         <div>
             <h1>🤖 Job Hunter Agent</h1>
             <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem;">
-                Autonomous Multi-Platform Scheduler • Next auto-run in 12h
+                Autonomous Multi-Platform Scheduler • Next auto-run in 12h • Notification: {email_cfg.get('recipient_email', 'chido.nduaguibe@gmail.com')}
             </div>
         </div>
         <div class="header-actions">
@@ -225,37 +225,67 @@ def render_dashboard_html() -> str:
 
     <!-- Management Panels -->
     <div class="management-grid">
-        <!-- 1. Role Selector -->
+        <!-- 1. Target Roles -->
         <div class="panel">
-            <div class="panel-title">
-                <span>🎯 Target Job Roles to Scrape</span>
-                <button onclick="saveRoles()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">Save Roles</button>
+            <div>
+                <div class="panel-title">
+                    <span>🎯 Target Job Roles</span>
+                    <button onclick="saveRoles()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">Save Roles</button>
+                </div>
+                <div id="roles-container" class="tag-list"></div>
             </div>
-            <div id="roles-container" class="tag-list"></div>
             <div class="input-group">
                 <input type="text" id="new-role-input" placeholder="e.g. Senior QA Engineer, DevOps..." onkeypress="if(event.key==='Enter') addRole()">
                 <button type="button" onclick="addRole()">+ Add Role</button>
             </div>
         </div>
 
-        <!-- 2. Role-Based CV Mapping -->
+        <!-- 2. Target Locations & Job Type -->
         <div class="panel">
-            <div class="panel-title">
-                <span>📄 Tailored CV Upload & Role Mapping</span>
+            <div>
+                <div class="panel-title">
+                    <span>🌍 Locations & Workplace Type</span>
+                    <button onclick="saveLocationSettings()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">Save Settings</button>
+                </div>
+                <div id="locations-container" class="tag-list"></div>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <input type="text" id="new-location-input" placeholder="Add location (e.g. Lagos, Abuja, Remote)..." onkeypress="if(event.key==='Enter') addLocation()">
+                    <button type="button" onclick="addLocation()">+ Add Location</button>
+                </div>
             </div>
-            <p style="color:var(--text-secondary); font-size:0.82rem; margin-bottom:0.8rem;">
-                Upload a specific CV for each career path. Playwright automatically attaches the matching CV when applying!
-            </p>
-            <div class="input-group" style="margin-bottom: 1rem;">
-                <select id="cv-role-select"></select>
-                <input type="file" id="cv-file-input" accept=".pdf" style="padding:0.4rem;">
-                <button type="button" onclick="uploadResume()">Upload & Assign</button>
+            <div>
+                <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem; font-weight:600;">Workplace Type Preference:</label>
+                <div class="input-group">
+                    <select id="job-type-select">
+                        <option value="both">Both (Remote & On-site / Hybrid)</option>
+                        <option value="remote">Remote Only</option>
+                        <option value="hybrid">Hybrid Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Tailored CV Mapping & Viewer -->
+        <div class="panel" style="grid-column: 1 / -1;">
+            <div>
+                <div class="panel-title">
+                    <span>📄 Tailored CVs & Live Preview</span>
+                </div>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:0.8rem;">
+                    Upload a tailored CV for each role. You can click <strong>View / Download</strong> anytime to verify your PDF!
+                </p>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <select id="cv-role-select" style="max-width:240px;"></select>
+                    <input type="file" id="cv-file-input" accept=".pdf" style="padding:0.4rem;">
+                    <button type="button" onclick="uploadResume()">Upload & Assign CV</button>
+                </div>
             </div>
             <table class="cv-table">
                 <thead>
                     <tr>
                         <th>Job Role</th>
                         <th>Assigned CV File</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="cv-mapping-body"></tbody>
@@ -285,6 +315,8 @@ def render_dashboard_html() -> str:
 
     <script>
         let currentRoles = {roles_json};
+        let currentLocations = {locations_json};
+        let currentJobType = {job_type_json};
         let currentResumes = {resumes_json};
 
         function showToast(msg) {{
@@ -294,12 +326,13 @@ def render_dashboard_html() -> str:
             setTimeout(() => {{ t.style.display = "none"; }}, 3000);
         }}
 
+        // Roles Management
         function renderRoles() {{
             const container = document.getElementById("roles-container");
             container.innerHTML = "";
             currentRoles.forEach((r, idx) => {{
                 const tag = document.createElement("div");
-                tag.className = "role-tag";
+                tag.className = "tag-item";
                 tag.innerHTML = `<span>${{r}}</span><span class="remove" onclick="removeRole(${{idx}})">×</span>`;
                 container.appendChild(tag);
             }});
@@ -331,6 +364,47 @@ def render_dashboard_html() -> str:
             }});
         }}
 
+        // Locations & Job Type Management
+        function renderLocations() {{
+            const container = document.getElementById("locations-container");
+            container.innerHTML = "";
+            currentLocations.forEach((loc, idx) => {{
+                const tag = document.createElement("div");
+                tag.className = "tag-item";
+                tag.innerHTML = `<span>${{loc}}</span><span class="remove" onclick="removeLocation(${{idx}})">×</span>`;
+                container.appendChild(tag);
+            }});
+            document.getElementById("job-type-select").value = currentJobType;
+        }}
+
+        function addLocation() {{
+            const inp = document.getElementById("new-location-input");
+            const val = inp.value.trim();
+            if (val && !currentLocations.includes(val)) {{
+                currentLocations.push(val);
+                inp.value = "";
+                renderLocations();
+            }}
+        }}
+
+        function removeLocation(idx) {{
+            currentLocations.splice(idx, 1);
+            renderLocations();
+        }}
+
+        function saveLocationSettings() {{
+            const jType = document.getElementById("job-type-select").value;
+            currentJobType = jType;
+            fetch("/api/search-settings", {{
+                method: "POST",
+                headers: {{ "Content-Type": "application/json" }},
+                body: JSON.stringify({{ locations: currentLocations, job_type: jType }})
+            }}).then(res => res.json()).then(data => {{
+                showToast("✅ Location & Job Type preferences saved!");
+            }});
+        }}
+
+        // CV Management & Viewing
         function renderRoleDropdown() {{
             const sel = document.getElementById("cv-role-select");
             sel.innerHTML = `<option value="default">Default / Fallback CV</option>`;
@@ -342,7 +416,17 @@ def render_dashboard_html() -> str:
             tbody.innerHTML = "";
             for (const [role, path] of Object.entries(currentResumes)) {{
                 const fname = path.split("/").pop();
-                tbody.innerHTML += `<tr><td><strong>${{role}}</strong></td><td style="color:var(--accent);">📄 ${{fname}}</td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${{role}}</strong></td>
+                        <td>📄 ${{fname}}</td>
+                        <td>
+                            <a href="/resumes/${{fname}}" target="_blank" style="color:var(--accent); font-weight:600; text-decoration:none;">
+                                👁️ View / Download PDF ↗
+                            </a>
+                        </td>
+                    </tr>
+                `;
             }}
         }}
 
@@ -388,6 +472,7 @@ def render_dashboard_html() -> str:
         }}
 
         renderRoles();
+        renderLocations();
     </script>
 </body>
 </html>
@@ -409,6 +494,21 @@ class InteractiveHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
+
+        elif self.path.startswith("/resumes/"):
+            filename = self.path.replace("/resumes/", "").split("?")[0]
+            file_path = RESUMES_DIR / filename
+            if file_path.exists():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/pdf")
+                self.send_header("Content-Disposition", f"inline; filename={filename}")
+                self.end_headers()
+                with open(file_path, "rb") as f:
+                    self.wfile.write(f.read())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
         elif self.path == "/api/status":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -431,6 +531,16 @@ class InteractiveHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok", "roles": cfg["search"]["roles"]}).encode("utf-8"))
+
+        elif self.path == "/api/search-settings":
+            cfg = load_config()
+            cfg.setdefault("search", {})["locations"] = data.get("locations", ["Nigeria"])
+            cfg["search"]["job_type"] = data.get("job_type", "both")
+            save_config(cfg)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
 
         elif self.path == "/api/upload-cv":
             import base64
@@ -470,7 +580,7 @@ def serve_dashboard(port: int = 8080):
     generate_dashboard()
     with socketserver.TCPServer(("", port), InteractiveHandler) as httpd:
         print(f"\n🌐 Interactive Dashboard live at http://localhost:{port}")
-        print("Features enabled: Role Selection, Multi-CV Upload, and 1-Click Cycle Triggering.")
+        print("Features enabled: Role Selection, Location & Job Type Settings, CV Upload & Preview, 1-Click Trigger.")
         print("Press Ctrl+C to stop.\n")
         try:
             httpd.serve_forever()

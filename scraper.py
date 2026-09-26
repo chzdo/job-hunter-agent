@@ -13,11 +13,12 @@ def run_job_search(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     search_cfg = config.get("search", {})
     roles = search_cfg.get("roles", ["Software Testing", "Product Management"])
-    platforms = search_cfg.get("platforms", ["linkedin", "indeed", "glassdoor", "zip_recruiter", "google"])
-    locations = search_cfg.get("locations", ["Remote"])
-    results_wanted = search_cfg.get("results_per_role", 10)
+    platforms = search_cfg.get("platforms", ["linkedin", "indeed", "glassdoor"])
+    locations = search_cfg.get("locations", ["Nigeria"])
+    job_type = search_cfg.get("job_type", "both").lower()
+    results_wanted = search_cfg.get("results_per_role", 5)
     hours_old = search_cfg.get("hours_old", 72)
-    is_remote = search_cfg.get("is_remote", True)
+    is_remote = True if job_type == "remote" else False
 
     new_jobs: List[Dict[str, Any]] = []
 

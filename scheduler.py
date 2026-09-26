@@ -77,6 +77,13 @@ def run_job_cycle(config: dict, dry_run: bool = False):
     logger.info(f"📊 Dashboard updated: {dash_path}")
     logger.info(f"📊 Current Overall Stats: {stats}")
 
+    try:
+        from notifier import send_email_report
+        recent_jobs = get_jobs_by_status("APPLIED", limit=10) + get_jobs_by_status("DISCOVERED", limit=10)
+        send_email_report(config, stats, recent_jobs)
+    except Exception as e:
+        logger.warning(f"Could not send email report: {e}")
+
 def start_scheduler(config: dict, run_immediately: bool = True):
     """Start the recurring 12-hour scheduler."""
     interval_hours = config.get("schedule", {}).get("interval_hours", 12)

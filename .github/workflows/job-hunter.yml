@@ -58,6 +58,11 @@ jobs:
         if: always()
         uses: actions/configure-pages@v4
 
+      - name: Prepare Pages Index
+        if: always()
+        run: |
+          cp data/dashboard.html data/index.html || true
+
       - name: Upload GitHub Pages Artifact
         if: always()
         uses: actions/upload-pages-artifact@v3

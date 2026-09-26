@@ -169,6 +169,31 @@ class PlaywrightApplier:
                 context.close()
                 return False
 
+    def get_resume_for_job(self, job: Dict[str, Any]) -> Optional[Path]:
+        """
+        Select the appropriate tailored CV based on the job title / role.
+        """
+        title = job.get("title", "").lower()
+        resumes_cfg = self.config.get("resumes", {})
+
+        for role_name, rel_path in resumes_cfg.items():
+            if role_name == "default":
+                continue
+            r_lower = role_name.lower()
+            if r_lower in title or any(w in title for w in r_lower.split()):
+                path = Path(__file__).parent / rel_path
+                if path.exists():
+                    logger.info(f"📄 Matched tailored resume for '{role_name}': {path.name}")
+                    return path
+
+        default_rel = resumes_cfg.get("default", "resumes/resume.pdf")
+        default_path = Path(__file__).parent / default_rel
+        if default_path.exists():
+            return default_path
+        if self.resume_path.exists():
+            return self.resume_path
+        return None
+
     def _apply_linkedin_easy_apply(self, page: Page, job: Dict[str, Any]) -> bool:
         """Fully automated LinkedIn Easy Apply without human prompts."""
         easy_apply_btn = page.query_selector("button.jobs-apply-button")
@@ -189,14 +214,16 @@ class PlaywrightApplier:
             step += 1
             human_delay(1.0, 2.0)
 
-            # Auto-upload resume if file upload input is present
+            # Auto-upload tailored resume if file upload input is present
+            target_resume = self.get_resume_for_job(job)
             file_input = page.query_selector("input[type='file']")
-            if file_input and self.resume_path.exists():
+            if file_input and target_resume and target_resume.exists():
                 try:
-                    file_input.set_input_files(str(self.resume_path))
+                    file_input.set_input_files(str(target_resume))
+                    logger.info(f"Attached tailored resume: {target_resume.name}")
                     human_delay(1.0, 1.5)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Could not attach resume: {e}")
 
             # Auto-fill inputs & screening questions
             form_inputs = page.query_selector_all("input[type='text'], input[type='number'], textarea")
@@ -279,14 +306,16 @@ class PlaywrightApplier:
                 except Exception:
                     pass
 
-        # Attach resume
+        # Attach tailored resume
+        target_resume = self.get_resume_for_job(job)
         file_input = page.query_selector("input[type='file']")
-        if file_input and self.resume_path.exists():
+        if file_input and target_resume and target_resume.exists():
             try:
-                file_input.set_input_files(str(self.resume_path))
+                file_input.set_input_files(str(target_resume))
+                logger.info(f"Attached tailored resume to ATS form: {target_resume.name}")
                 human_delay(1.0, 1.5)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Could not attach resume to ATS form: {e}")
 
         # Attempt submission on ATS
         submit_btn = page.query_selector("button[type='submit'], input[type='submit']")

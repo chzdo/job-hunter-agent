@@ -8,7 +8,19 @@ candidate:
   linkedin_url: "https://www.linkedin.com/in/your-profile"
   github_url: "https://github.com/your-username"
   portfolio_url: "https://yourportfolio.com"
-  resume_path: "resumes/resume.pdf" # Path to your PDF resume
+  resume_path: "resumes/resume.pdf" # Default fallback resume
+
+# Role-specific Resume Mapping
+resumes:
+  "Software Testing": "resumes/software_testing_resume.pdf"
+  "QA Engineer": "resumes/software_testing_resume.pdf"
+  "Product Management": "resumes/product_manager_resume.pdf"
+  "Product Manager": "resumes/product_manager_resume.pdf"
+  "Personal Assistant": "resumes/pa_resume.pdf"
+  "PA": "resumes/pa_resume.pdf"
+  "Customer Care Representative": "resumes/customer_care_resume.pdf"
+  "Customer Support Representative": "resumes/customer_care_resume.pdf"
+  "default": "resumes/resume.pdf"
 
 # Search & Targeting Configuration
 search:

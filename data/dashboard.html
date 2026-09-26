@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Hunter Agent - Live Dashboard</title>
-    <meta http-equiv="refresh" content="60">
+    <title>Job Hunter Agent - Command & Control Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,50 +16,103 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --info: #6366f1;
+            --info: #818cf8;
+            --btn-bg: #2563eb;
+            --btn-hover: #1d4ed8;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text-primary); padding: 2rem; }
+        body { background: var(--bg); color: var(--text-primary); padding: 2rem; max-width: 1400px; margin: auto; }
+        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
         .header h1 { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
-        .timestamp { color: var(--text-secondary); font-size: 0.9rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .card-title { color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-        .card-value { font-size: 2.2rem; font-weight: 700; margin-top: 0.5rem; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        
+        button.btn-primary {
+            background: var(--btn-bg); color: #fff; border: none; padding: 0.75rem 1.4rem;
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        button.btn-primary:hover { background: var(--btn-hover); transform: translateY(-1px); }
+        button.btn-primary:disabled { background: #475569; cursor: not-allowed; transform: none; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .card-title { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .card-value { font-size: 2rem; font-weight: 700; margin-top: 0.4rem; }
         .card.applied .card-value { color: var(--success); }
         .card.discovered .card-value { color: var(--accent); }
         .card.queued .card-value { color: var(--warning); }
         .card.skipped .card-value { color: var(--info); }
         .card.failed .card-value { color: var(--danger); }
-        
-        .section-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
+
+        .management-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem; }
+        @media(max-width: 900px) { .management-grid { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+        .panel-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+
+        .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 48px; }
+        .role-tag { background: #334155; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+        .role-tag span.remove { cursor: pointer; color: #f87171; font-weight: bold; font-size: 1rem; }
+        .role-tag span.remove:hover { color: #ef4444; }
+
+        .input-group { display: flex; gap: 0.5rem; }
+        .input-group input, .input-group select {
+            background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 0.6rem 0.8rem;
+            border-radius: 6px; font-size: 0.9rem; flex: 1;
+        }
+        .input-group button {
+            background: #334155; border: 1px solid var(--border); color: #fff; padding: 0.6rem 1rem;
+            border-radius: 6px; cursor: pointer; font-weight: 500;
+        }
+        .input-group button:hover { background: #475569; }
+
+        .cv-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.88rem; }
+        .cv-table th, .cv-table td { padding: 0.6rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .cv-table th { color: var(--text-secondary); }
+
         .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-        th { background: #111827; padding: 1rem; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border); }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); }
-        tr:hover { background: rgba(255, 255, 255, 0.02); }
-        
+        table.jobs-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem; }
+        table.jobs-table th { background: #111827; padding: 0.9rem; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+        table.jobs-table td { padding: 0.9rem; border-bottom: 1px solid var(--border); }
+        table.jobs-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+
         .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
         .badge-applied { background: rgba(16, 185, 129, 0.2); color: var(--success); }
         .badge-discovered { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
         .badge-queued { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .badge-skipped { background: rgba(99, 102, 241, 0.2); color: var(--info); }
+        .badge-skipped { background: rgba(129, 140, 248, 0.2); color: var(--info); }
         .badge-failed { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        
         a.job-link { color: var(--accent); text-decoration: none; font-weight: 500; }
         a.job-link:hover { text-decoration: underline; }
+        
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; background: #10b981; color: #fff;
+            padding: 1rem 1.5rem; border-radius: 8px; font-weight: 600; display: none; z-index: 100;
+        }
     </style>
 </head>
 <body>
+    <div id="toast" class="toast">Action Saved!</div>
+
     <div class="header">
         <div>
-            <h1>🤖 Job Hunter & Application Agent</h1>
-            <div class="timestamp">Live Dashboard • Refreshes automatically every 60s</div>
+            <h1>🤖 Job Hunter Agent</h1>
+            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem;">
+                Autonomous Multi-Platform Scheduler • Next auto-run in 12h
+            </div>
         </div>
-        <div class="timestamp">Last Updated: 2026-09-26 12:48:02</div>
+        <div class="header-actions">
+            <span id="running-indicator" style="display: none; color: var(--warning); font-size: 0.9rem; font-weight: 600;">
+                ⏳ Cycle in progress...
+            </span>
+            <button id="trigger-btn" class="btn-primary" onclick="triggerCycle()" >
+                🚀 Run Search & Apply Now
+            </button>
+        </div>
     </div>
 
+    <!-- Metrics -->
     <div class="stats-grid">
         <div class="card discovered">
             <div class="card-title">Total Discovered</div>
@@ -79,14 +131,55 @@
             <div class="card-value">0</div>
         </div>
         <div class="card failed">
-            <div class="card-title">Failed / Blocked</div>
+            <div class="card-title">Blocked / Failed</div>
             <div class="card-value">0</div>
         </div>
     </div>
 
-    <div class="section-title">📋 Recent Applications & Discovered Opportunities</div>
+    <!-- Management Panels -->
+    <div class="management-grid">
+        <!-- 1. Role Selector -->
+        <div class="panel">
+            <div class="panel-title">
+                <span>🎯 Target Job Roles to Scrape</span>
+                <button onclick="saveRoles()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">Save Roles</button>
+            </div>
+            <div id="roles-container" class="tag-list"></div>
+            <div class="input-group">
+                <input type="text" id="new-role-input" placeholder="e.g. Senior QA Engineer, DevOps..." onkeypress="if(event.key==='Enter') addRole()">
+                <button type="button" onclick="addRole()">+ Add Role</button>
+            </div>
+        </div>
+
+        <!-- 2. Role-Based CV Mapping -->
+        <div class="panel">
+            <div class="panel-title">
+                <span>📄 Tailored CV Upload & Role Mapping</span>
+            </div>
+            <p style="color:var(--text-secondary); font-size:0.82rem; margin-bottom:0.8rem;">
+                Upload a specific CV for each career path. Playwright automatically attaches the matching CV when applying!
+            </p>
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <select id="cv-role-select"></select>
+                <input type="file" id="cv-file-input" accept=".pdf" style="padding:0.4rem;">
+                <button type="button" onclick="uploadResume()">Upload & Assign</button>
+            </div>
+            <table class="cv-table">
+                <thead>
+                    <tr>
+                        <th>Job Role</th>
+                        <th>Assigned CV File</th>
+                    </tr>
+                </thead>
+                <tbody id="cv-mapping-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Live Jobs Table -->
+    <div class="panel-title" style="margin-top: 1rem;">📋 Real-Time Job Opportunities & Application History</div>
     <div class="table-container">
-        <table>
+        <table class="jobs-table">
             <thead>
                 <tr>
                     <th>Status</th>
@@ -94,7 +187,7 @@
                     <th>Job Title</th>
                     <th>Company</th>
                     <th>Location</th>
-                    <th>Link</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,7 +201,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4469474726" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -118,7 +210,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470066057" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -128,7 +219,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=f64af4bf33ed6af2" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -138,7 +228,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=e79cd55477885cfd" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -148,7 +237,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=61de3ba6517c6a51" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -158,7 +246,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=31458fe2f8d78c13" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -168,7 +255,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472202539" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -178,7 +264,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472024388" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -188,7 +273,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4469489337" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -198,7 +282,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472262077" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -208,7 +291,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470128408" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -218,7 +300,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=bc3cc1442fe77921" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -228,7 +309,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=10abcb40f97eee49" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -238,7 +318,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=e9f9071408d815dd" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -248,7 +327,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=a556a9a14edd4c09" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Indeed</strong></td>
@@ -258,7 +336,6 @@
             <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=272495702fd627a2" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -268,7 +345,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4442657196" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -278,7 +354,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4432738400" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -288,7 +363,6 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470704808" target="_blank">View Listing ↗</a></td>
         </tr>
         
-
         <tr>
             <td><span class="badge badge-discovered">DISCOVERED</span></td>
             <td><strong>Linkedin</strong></td>
@@ -298,8 +372,160 @@
             <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4414490537" target="_blank">View Listing ↗</a></td>
         </tr>
         
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Gastroenterology - Physician Assistant - Jefferson Center City</td>
+            <td>Jefferson Health</td>
+            <td>Philadelphia, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4414705442" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Clinical Placement Coordinator - MPAS NH</td>
+            <td>Franklin Pierce University</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=5f0be296482a4ad3" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Talent Acquisition Business Partner</td>
+            <td>nan</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=1e82cbb610eaf42a" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Vice President, Integrated Marketing Strategy</td>
+            <td>HARVEST GROUP</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=782f23ab2a287ab2" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Legislative Counsel</td>
+            <td>Instacart</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=0b40be60b06d5714" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
             </tbody>
         </table>
     </div>
+
+    <script>
+        let currentRoles = ["Software Testing", "QA Engineer", "Product Management", "Product Manager", "Personal Assistant", "PA", "Customer Care Representative", "Customer Support Representative"];
+        let currentResumes = {"Software Testing": "resumes/software_testing_resume.pdf", "QA Engineer": "resumes/software_testing_resume.pdf", "Product Management": "resumes/product_manager_resume.pdf", "Product Manager": "resumes/product_manager_resume.pdf", "Personal Assistant": "resumes/pa_resume.pdf", "PA": "resumes/pa_resume.pdf", "Customer Care Representative": "resumes/customer_care_resume.pdf", "Customer Support Representative": "resumes/customer_care_resume.pdf", "default": "resumes/resume.pdf"};
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.style.display = "block";
+            setTimeout(() => { t.style.display = "none"; }, 3000);
+        }
+
+        function renderRoles() {
+            const container = document.getElementById("roles-container");
+            container.innerHTML = "";
+            currentRoles.forEach((r, idx) => {
+                const tag = document.createElement("div");
+                tag.className = "role-tag";
+                tag.innerHTML = `<span>${r}</span><span class="remove" onclick="removeRole(${idx})">×</span>`;
+                container.appendChild(tag);
+            });
+            renderRoleDropdown();
+        }
+
+        function addRole() {
+            const inp = document.getElementById("new-role-input");
+            const val = inp.value.trim();
+            if (val && !currentRoles.includes(val)) {
+                currentRoles.push(val);
+                inp.value = "";
+                renderRoles();
+            }
+        }
+
+        function removeRole(idx) {
+            currentRoles.splice(idx, 1);
+            renderRoles();
+        }
+
+        function saveRoles() {
+            fetch("/api/roles", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roles: currentRoles })
+            }).then(res => res.json()).then(data => {
+                showToast("✅ Target roles updated & saved!");
+            });
+        }
+
+        function renderRoleDropdown() {
+            const sel = document.getElementById("cv-role-select");
+            sel.innerHTML = `<option value="default">Default / Fallback CV</option>`;
+            currentRoles.forEach(r => {
+                sel.innerHTML += `<option value="${r}">${r}</option>`;
+            });
+
+            const tbody = document.getElementById("cv-mapping-body");
+            tbody.innerHTML = "";
+            for (const [role, path] of Object.entries(currentResumes)) {
+                const fname = path.split("/").pop();
+                tbody.innerHTML += `<tr><td><strong>${role}</strong></td><td style="color:var(--accent);">📄 ${fname}</td></tr>`;
+            }
+        }
+
+        function uploadResume() {
+            const fileInput = document.getElementById("cv-file-input");
+            const roleSelect = document.getElementById("cv-role-select");
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a PDF resume to upload.");
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const b64Data = e.target.result.split(",")[1];
+                fetch("/api/upload-cv", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        role: roleSelect.value,
+                        filename: file.name,
+                        filedata: b64Data
+                    })
+                }).then(res => res.json()).then(data => {
+                    currentResumes[roleSelect.value] = data.saved_path;
+                    renderRoleDropdown();
+                    showToast("✅ CV successfully uploaded & mapped to " + roleSelect.value);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function triggerCycle() {
+            const btn = document.getElementById("trigger-btn");
+            const indicator = document.getElementById("running-indicator");
+            btn.disabled = true;
+            indicator.style.display = "inline";
+            fetch("/api/trigger-cycle", { method: "POST" })
+                .then(res => res.json())
+                .then(() => {
+                    showToast("🚀 Search & Apply cycle started in background!");
+                    setTimeout(() => { window.location.reload(); }, 10000);
+                });
+        }
+
+        renderRoles();
+    </script>
 </body>
 </html>

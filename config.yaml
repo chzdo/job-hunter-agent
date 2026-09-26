@@ -1,0 +1,68 @@
+# Job Hunter Agent Configuration
+
+candidate:
+  full_name: "Candidate Name"
+  email: "candidate@example.com"
+  phone: "+1234567890"
+  location: "Remote"
+  linkedin_url: "https://www.linkedin.com/in/your-profile"
+  github_url: "https://github.com/your-username"
+  portfolio_url: "https://yourportfolio.com"
+  resume_path: "resumes/resume.pdf" # Path to your PDF resume
+
+# Search & Targeting Configuration
+search:
+  roles:
+    - "Software Testing"
+    - "QA Engineer"
+    - "Product Management"
+    - "Product Manager"
+    - "Personal Assistant"
+    - "PA"
+    - "Customer Care Representative"
+    - "Customer Support Representative"
+
+  # Platforms to search: linkedin, indeed, glassdoor, zip_recruiter, google
+  platforms:
+    - "linkedin"
+    - "indeed"
+    - "glassdoor"
+
+  locations:
+    - "Remote"
+
+  is_remote: true
+  results_per_role: 5
+  hours_old: 72 # Only fetch jobs posted within the last 72 hours
+
+# Scheduler settings
+schedule:
+  interval_hours: 12
+  daily_max_applications: 20 # Safe limit to avoid account throttling
+
+# Auto-Answer Screening Questions
+screening_answers:
+  authorized_to_work: "Yes"
+  require_sponsorship: "No"
+  years_of_experience:
+    "software testing": 4
+    "qa": 4
+    "product management": 3
+    "product manager": 3
+    "personal assistant": 3
+    "pa": 3
+    "customer care": 4
+    "customer support": 4
+    "default": 3
+  salary_expectation: "$75,000 - $110,000 USD / year"
+  notice_period: "Immediate / 2 weeks"
+  education_level: "Bachelor's Degree"
+  gender: "Decline to answer"
+  race: "Decline to answer"
+  veteran_status: "No"
+  disability_status: "No"
+
+# Browser & Safety
+browser:
+  headless: false # Set false so you can watch or solve any CAPTCHAs if needed
+  human_delay_seconds: [2, 5] # Random wait between actions

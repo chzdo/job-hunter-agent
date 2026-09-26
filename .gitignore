@@ -1,0 +1,17 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Sensitive credentials & personal data
+.env
+resumes/*.pdf
+!resumes/resume_sample.pdf
+
+# Local database & browser sessions
+data/jobs.db
+data/browser_profile/
+*.log
+
+# OS files
+.DS_Store

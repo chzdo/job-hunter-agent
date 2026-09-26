@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Hunter Agent - Live Dashboard</title>
+    <meta http-equiv="refresh" content="60">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #6366f1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-primary); padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+        .header h1 { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .timestamp { color: var(--text-secondary); font-size: 0.9rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .card-title { color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card-value { font-size: 2.2rem; font-weight: 700; margin-top: 0.5rem; }
+        .card.applied .card-value { color: var(--success); }
+        .card.discovered .card-value { color: var(--accent); }
+        .card.queued .card-value { color: var(--warning); }
+        .card.skipped .card-value { color: var(--info); }
+        .card.failed .card-value { color: var(--danger); }
+        
+        .section-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
+        .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+        th { background: #111827; padding: 1rem; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border); }
+        td { padding: 1rem; border-bottom: 1px solid var(--border); }
+        tr:hover { background: rgba(255, 255, 255, 0.02); }
+        
+        .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-applied { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-discovered { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
+        .badge-queued { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-skipped { background: rgba(99, 102, 241, 0.2); color: var(--info); }
+        .badge-failed { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        
+        a.job-link { color: var(--accent); text-decoration: none; font-weight: 500; }
+        a.job-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🤖 Job Hunter & Application Agent</h1>
+            <div class="timestamp">Live Dashboard • Refreshes automatically every 60s</div>
+        </div>
+        <div class="timestamp">Last Updated: 2026-09-26 12:48:02</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="card discovered">
+            <div class="card-title">Total Discovered</div>
+            <div class="card-value">130</div>
+        </div>
+        <div class="card applied">
+            <div class="card-title">Successfully Applied</div>
+            <div class="card-value">0</div>
+        </div>
+        <div class="card queued">
+            <div class="card-title">Queued / Review</div>
+            <div class="card-value">0</div>
+        </div>
+        <div class="card skipped">
+            <div class="card-title">Skipped</div>
+            <div class="card-value">0</div>
+        </div>
+        <div class="card failed">
+            <div class="card-title">Failed / Blocked</div>
+            <div class="card-value">0</div>
+        </div>
+    </div>
+
+    <div class="section-title">📋 Recent Applications & Discovered Opportunities</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Platform</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Location</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Customer Care Representative</td>
+            <td>Atos Medical</td>
+            <td>Nottingham, England, UK</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4469474726" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Primary Contact Center Representative (Call Center)</td>
+            <td>F.N.B. Corporation</td>
+            <td>Pittsburgh, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470066057" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Remote Customer Support Specialist</td>
+            <td>Shisler & Associates Insurance, Inc</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=f64af4bf33ed6af2" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Remote Customer Service Representative</td>
+            <td>Conduent</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=e79cd55477885cfd" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Client & Interpreter Support Specialist (Customer Service Representative)</td>
+            <td>American Sign Language Communication</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=61de3ba6517c6a51" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Representative Senior BPS Middle Office</td>
+            <td>FIS</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=31458fe2f8d78c13" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Bilingual Customer Service Rep I</td>
+            <td>WebTPA</td>
+            <td>San Antonio, TX</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472202539" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Customer Service Advisor - Energy (London)</td>
+            <td>Octopus Energy</td>
+            <td>London, England, UK</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472024388" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Customer Service Representative-M135L00</td>
+            <td>Matthews International</td>
+            <td>Pittsburgh, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4469489337" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Call Center Representative - Metairie</td>
+            <td>Window World of LA / TX / FL</td>
+            <td>Metairie, LA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4472262077" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Customer Service Representative</td>
+            <td>Fastpost LLC</td>
+            <td>Livermore, CA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470128408" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Financial Services Representative – Dental Professionals Welcome</td>
+            <td>TKB Life</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=bc3cc1442fe77921" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Account Executive, K-12 Sales (Central CA)</td>
+            <td>Solution Tree</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=10abcb40f97eee49" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Call Center Representative</td>
+            <td>Customer Contact Services</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=e9f9071408d815dd" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>National Workforce Information Representative</td>
+            <td>Senture</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=a556a9a14edd4c09" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Indeed</strong></td>
+            <td>Territory Sales Representative, Essential Dentistry</td>
+            <td>Dentsply Sirona</td>
+            <td>Remote, US</td>
+            <td><a class="job-link" href="https://www.indeed.com/viewjob?jk=272495702fd627a2" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Physician Assistant - Four Diamonds Peds</td>
+            <td>Penn State Health</td>
+            <td>Hershey, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4442657196" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>PA or CRNP, Staff or Senior - Northwest Primary Care</td>
+            <td>UPMC</td>
+            <td>Franklin, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4432738400" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Executive Assistant</td>
+            <td>Fullsight</td>
+            <td>Warrendale, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4470704808" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+
+        <tr>
+            <td><span class="badge badge-discovered">DISCOVERED</span></td>
+            <td><strong>Linkedin</strong></td>
+            <td>Family Medicine at Mayfair Advanced Practice Provider (Nurse Practitioner/Physician Assistant) Primary Care Jefferson Einstein</td>
+            <td>Jefferson Health</td>
+            <td>Philadelphia, PA</td>
+            <td><a class="job-link" href="https://www.linkedin.com/jobs/view/4414490537" target="_blank">View Listing ↗</a></td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
